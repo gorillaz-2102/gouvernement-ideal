@@ -97,16 +97,24 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // 2. LISTE DES POSTES
+
+    // 2. LISTE DES POSTES COMPLÈTE
     const fonctions = [
       { id: 1, titre: "Président de la République", personne: null },
       { id: 2, titre: "Premier Ministre", personne: null },
       { id: 3, titre: "Ministre de l'Intérieur", personne: null },
       { id: 4, titre: "Ministre de la Justice", personne: null },
       { id: 5, titre: "Ministre des Affaires Étrangères", personne: null },
-      { id: 6, titre: "Ministre de l'Économie", personne: null },
-      { id: 7, titre: "Ministre de l'Éducation", personne: null },
-      { id: 8, titre: "Ministre de la Santé", personne: null }
+      { id: 6, titre: "Ministre des Armées", personne: null },
+      { id: 7, titre: "Ministre de l'Éducation Nationale", personne: null },
+      { id: 8, titre: "Ministre de l'Économie et des Finances", personne: null },
+      { id: 9, titre: "Ministre de la Santé", personne: null },
+      { id: 10, titre: "Ministre de l'Environnement", personne: null },
+      { id: 11, titre: "Ministre de la Culture", personne: null },
+      { id: 12, titre: "Ministre de l'Agriculture", personne: null },
+      { id: 13, titre: "Ministre du Travail", personne: null },
+      { id: 14, titre: "Ministre des Outre-mer", personne: null },
+      { id: 15, titre: "Ministre des Sports", personne: null }
     ];
 
     const grid = document.getElementById("government-grid");
