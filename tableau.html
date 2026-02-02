@@ -2,41 +2,47 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Statistiques - Mon Gouvernement Idéal</title>
+  <title>Tableau de Bord - Daruma</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@700&family=Dancing+Script:wght@700&display=swap');
     body { margin: 0; font-family: 'Segoe UI', sans-serif; background: linear-gradient(to right, #002366 33%, #ffffff 34% 66%, #ce1126 67%); min-height: 100vh; }
-    .container { max-width: 900px; margin: 0 auto; background: #f5f5f5; min-height: 100vh; padding-bottom: 50px; box-shadow: 0 0 20px rgba(0,0,0,0.2); }
-    header { width: 100%; height: 200px; background: white url('https://github.com/gorillaz-2102/Political-Severance/raw/main/header_banner.jpg') center center no-repeat; background-size: contain; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 20px; }
-    h1 { font-family: 'Dancing Script', cursive; color: #002366; font-size: 2.5em; margin: 0; }
-    h2 { font-family: 'Roboto Condensed', sans-serif; color: #333; text-transform: uppercase; border-bottom: 2px solid #002366; padding-bottom: 5px; margin: 40px 20px 20px; }
-    table { width: calc(100% - 40px); margin: 0 20px; border-collapse: collapse; background: white; }
-    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-    th { background-color: #002366; color: white; text-transform: uppercase; }
-    .return-btn { display: inline-block; margin: 20px; padding: 10px 20px; background: #ce1126; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }
+    .container { max-width: 900px; margin: 40px auto; background: #f5f5f5; border-radius: 15px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+    h1 { font-family: 'Dancing Script', cursive; color: #002366; text-align: center; font-size: 3em; margin-top: 0; }
+    h2 { font-family: 'Roboto Condensed', sans-serif; border-bottom: 3px solid #ce1126; padding-bottom: 5px; margin-top: 40px; color: #333; }
+    table { width: 100%; border-collapse: collapse; background: white; margin-top: 15px; border-radius: 8px; overflow: hidden; }
+    th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
+    th { background: #002366; color: white; text-transform: uppercase; letter-spacing: 1px; }
+    tr:hover { background: #f9f9f9; }
+    .wiki-link { color: #002366; font-weight: bold; text-decoration: none; border-bottom: 1px dotted #002366; }
+    .wiki-link:hover { color: #ce1126; border-bottom-style: solid; }
+    .return-btn { display: inline-block; margin-top: 30px; padding: 12px 25px; background: #ce1126; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; transition: 0.3s; }
+    .return-btn:hover { background: #a00d1e; transform: scale(1.05); }
   </style>
 </head>
 <body>
   <div class="container">
-    <header><h1>Tableau du Gouvernement</h1></header>
-    <h2>Ton Équipe</h2>
+    <h1>Daruma - Gouvernement</h1>
+    
+    <h2>Votre Sélection</h2>
     <table id="table-fonctions">
-      <thead><tr><th>Fonction</th><th>Titulaire</th></tr></thead>
+      <thead><tr><th>Ministère</th><th>Titulaire (Fiche Wiki)</th></tr></thead>
       <tbody></tbody>
     </table>
-    <h2>Top 10 Global (Firebase)</h2>
+
+    <h2>Classement Global (Top 10 Firebase)</h2>
     <table id="table-populaires">
-      <thead><tr><th>Personnalité</th><th>Sélections</th></tr></thead>
+      <thead><tr><th>Personnalité</th><th>Nombre de sélections</th></tr></thead>
       <tbody></tbody>
     </table>
-    <a class="return-btn" href="index.html">⬅ Créer un autre gouvernement</a>
+
+    <a class="return-btn" href="index.html">⬅ Créer un nouveau gouvernement</a>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getFirestore, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // REMPLACE par tes clés Severance-2025
+    // CONFIGURATION FIREBASE (À remplir avec tes clés)
     const firebaseConfig = {
       apiKey: "TON_API_KEY",
       authDomain: "severance-2025.firebaseapp.com",
@@ -47,31 +53,46 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // 1. Lire les données depuis l'URL (Correctif pour l'index)
+    // 1. AFFICHAGE DES RÉSULTATS DE L'URL
     const params = new URLSearchParams(window.location.search);
-    const tbodyFonctions = document.querySelector("#table-fonctions tbody");
+    const tbodyLocal = document.querySelector("#table-fonctions tbody");
+    
     params.forEach((value, key) => {
       let personne;
-      try { personne = JSON.parse(value); } catch(e) { personne = {nom: value}; }
+      try { 
+        personne = JSON.parse(value); 
+      } catch(e) { 
+        personne = { nom: value, url: `https://fr.wikipedia.org/wiki/${encodeURIComponent(value)}` }; 
+      }
+      
       const tr = document.createElement("tr");
-      tr.innerHTML = `<td><b>${key}</b></td><td>${personne.nom}</td>`;
-      tbodyFonctions.appendChild(tr);
+      tr.innerHTML = `
+        <td><b>${key}</b></td>
+        <td><a class="wiki-link" href="${personne.url}" target="_blank">${personne.nom} 🔗</a></td>
+      `;
+      tbodyLocal.appendChild(tr);
     });
 
-    // 2. Charger les stats de Firebase
-    async function chargerStatsGlobales() {
-      const q = query(collection(db, "stats_globales"), orderBy("votes", "desc"), limit(10));
-      const querySnapshot = await getDocs(q);
-      const tbodyPopulaires = document.querySelector("#table-populaires tbody");
-      tbodyPopulaires.innerHTML = ""; 
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        const tr = document.createElement("tr");
-        tr.innerHTML = `<td>${data.nom}</td><td>${data.votes} fois</td>`;
-        tbodyPopulaires.appendChild(tr);
-      });
+    // 2. CHARGEMENT DU TOP 10 DEPUIS FIREBASE
+    async function loadGlobalStats() {
+      try {
+        const q = query(collection(db, "stats_globales"), orderBy("votes", "desc"), limit(10));
+        const snap = await getDocs(q);
+        const tbodyGlobal = document.querySelector("#table-populaires tbody");
+        tbodyGlobal.innerHTML = "";
+        
+        snap.forEach(doc => {
+          const data = doc.data();
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td>${data.nom}</td><td><b>${data.votes}</b> fois</td>`;
+          tbodyGlobal.appendChild(tr);
+        });
+      } catch (err) {
+        console.error("Erreur lors du chargement des stats:", err);
+      }
     }
-    chargerStatsGlobales();
+    
+    loadGlobalStats();
   </script>
 </body>
 </html>
