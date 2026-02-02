@@ -139,32 +139,34 @@
     }
 
     // 4. RECHERCHE WIKIPEDIA
-    window.searchWiki = async (id) => {
-      const query = document.getElementById(`input-${id}`).value;
-      if (!query) return;
+      window.searchWiki = async (id) => {
+  const query = document.getElementById(`input-${id}`).value;
+  if (!query) return;
 
-      const url = `https://fr.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`;
-      try {
-        const response = await fetch(url);
-        const data = await response.json();
-        
-        const personne = {
-          nom: data.title,
-          image: data.thumbnail ? data.thumbnail.source : 'https://via.placeholder.com/80'
-        };
-
-        // Mise à jour de la donnée
-        const index = fonctions.findIndex(f => f.id === id);
-        fonctions[index].personne = personne;
-
-        // Mise à jour visuelle immédiate
-        document.getElementById(`img-${id}`).src = personne.image;
-        document.getElementById(`img-${id}`).style.display = "block";
-        document.getElementById(`nom-${id}`).textContent = personne.nom;
-      } catch (e) {
-        alert("Personne non trouvée sur Wikipedia");
-      }
+  const url = `https://fr.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`;
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+    
+    const personne = {
+      nom: data.title,
+      image: data.thumbnail ? data.thumbnail.source : 'https://via.placeholder.com/80',
+      url: data.content_urls.desktop.page // On récupère l'adresse de la fiche ici
     };
+
+    const index = fonctions.findIndex(f => f.id === id);
+    fonctions[index].personne = personne;
+
+    // Mise à jour visuelle : le nom devient un lien cliquable
+    document.getElementById(`img-${id}`).src = personne.image;
+    document.getElementById(`img-${id}`).style.display = "block";
+    
+    const nomDiv = document.getElementById(`nom-${id}`);
+    nomDiv.innerHTML = `<a href="${personne.url}" target="_blank" style="color: #002366; text-decoration: underline;">${personne.nom}</a>`;
+  } catch (e) {
+    alert("Personne non trouvée sur Wikipedia");
+  }
+};
 
     // 5. VALIDATION ET FIREBASE
     document.getElementById("validerBtn").addEventListener("click", async () => {
