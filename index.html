@@ -1,11 +1,92 @@
 <!DOCTYPE html>
 <html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Mon Gouvernement Idéal</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@700&family=Dancing+Script:wght@700&display=swap');
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #002366 33%, #ffffff 34% 66%, #ce1126 67%);
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 1150px; margin: 0 auto; background: #f5f5f5;
+      min-height: 100vh; display: flex; flex-direction: column;
+      position: relative; z-index: 1;
+    }
+    header {
+      width: 100%; height: 280px;
+      background: white url('https://github.com/gorillaz-2102/Political-Severance/raw/main/header_banner.jpg') top center no-repeat;
+      background-size: contain; display: flex; flex-direction: column;
+      justify-content: center; align-items: center; text-align: center;
+    }
+    h1 { font-family: 'Dancing Script', cursive; color: #002366; font-size: 3.5em; margin: 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.1); }
+    
+    .grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 20px; padding: 30px; flex-grow: 1;
+    }
+    .card {
+      background: white; border-radius: 12px; padding: 20px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-top: 5px solid #002366;
+      display: flex; flex-direction: column; align-items: center; transition: 0.3s;
+    }
+    .card:hover { transform: translateY(-5px); }
+    .role-name { font-family: 'Roboto Condensed', sans-serif; font-size: 1.1em; margin-bottom: 15px; color: #333; text-align: center; height: 45px; }
+    
+    .search-box { width: 100%; display: flex; gap: 5px; margin-bottom: 10px; }
+    input { flex-grow: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+    button { padding: 8px 12px; cursor: pointer; border: none; border-radius: 4px; background: #002366; color: white; font-weight: bold; }
+    button:hover { background: #ce1126; }
+
+    .result-img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-top: 10px; border: 2px solid #eee; display: none; }
+    
+    .footer-actions { padding: 30px; text-align: center; background: #eee; }
+    #validerBtn { padding: 15px 40px; font-size: 1.2em; background: #28a745; }
+
+    /* Overlay Popup */
+    #overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 1000;
+    }
+    .popup { background: white; padding: 30px; border-radius: 10px; max-width: 500px; width: 90%; text-align: center; }
+    textarea { width: 100%; height: 80px; margin: 15px 0; padding: 10px; }
+  </style>
+</head>
 <body>
+
+  <div class="container">
+    <header>
+      <h1>Mon Gouvernement Idéal</h1>
+    </header>
+
+    <div id="government-grid" class="grid"></div>
+
+    <div class="footer-actions">
+      <button id="validerBtn">🇫🇷 VALIDER MON GOUVERNEMENT</button>
+    </div>
+  </div>
+
+  <div id="overlay">
+    <div class="popup">
+      <h2>Gouvernement Prêt !</h2>
+      <p>Partagez votre équipe avec ce lien :</p>
+      <textarea id="generatedLink" readonly></textarea>
+      <br>
+      <button id="copyLinkBtn">Copier le lien</button>
+      <button id="goToTableBtn" style="background:#002366">Voir le Tableau</button>
+      <button id="closePopup" style="background:#aaa">Fermer</button>
+    </div>
+  </div>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getFirestore, doc, setDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // REMPLACE CECI par tes clés Firebase (Paramètres du projet > Applications)
+    // 1. CONFIGURATION FIREBASE (Remplace avec tes vraies clés !)
     const firebaseConfig = {
       apiKey: "TON_API_KEY",
       authDomain: "severance-2025.firebaseapp.com",
@@ -16,38 +97,102 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // Tes données de fonctions
+    // 2. LISTE DES POSTES
     const fonctions = [
-      { nom: "Président de la République", personne: null },
-      { nom: "Premier Ministre", personne: null },
-      // ... (Remets bien toute ta liste ici)
+      { id: 1, titre: "Président de la République", personne: null },
+      { id: 2, titre: "Premier Ministre", personne: null },
+      { id: 3, titre: "Ministre de l'Intérieur", personne: null },
+      { id: 4, titre: "Ministre de la Justice", personne: null },
+      { id: 5, titre: "Ministre des Affaires Étrangères", personne: null },
+      { id: 6, titre: "Ministre de l'Économie", personne: null },
+      { id: 7, titre: "Ministre de l'Éducation", personne: null },
+      { id: 8, titre: "Ministre de la Santé", personne: null }
     ];
 
-    // --- Garde ici toute ta fonction afficherFonctions() actuelle ---
+    const grid = document.getElementById("government-grid");
 
+    // 3. FONCTION D'AFFICHAGE DES CARTES
+    function renderGrid() {
+      grid.innerHTML = "";
+      fonctions.forEach(f => {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <div class="role-name">${f.titre}</div>
+          <div class="search-box">
+            <input type="text" id="input-${f.id}" placeholder="Chercher sur Wikipedia..." value="${f.personne ? f.personne.nom : ''}">
+            <button onclick="window.searchWiki(${f.id})">🔍</button>
+          </div>
+          <img id="img-${f.id}" class="result-img" src="${f.personne ? f.personne.image : ''}" style="display: ${f.personne ? 'block' : 'none'}">
+          <div id="nom-${f.id}" style="font-weight:bold; margin-top:5px">${f.personne ? f.personne.nom : ''}</div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    // 4. RECHERCHE WIKIPEDIA
+    window.searchWiki = async (id) => {
+      const query = document.getElementById(`input-${id}`).value;
+      if (!query) return;
+
+      const url = `https://fr.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`;
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        const personne = {
+          nom: data.title,
+          image: data.thumbnail ? data.thumbnail.source : 'https://via.placeholder.com/80'
+        };
+
+        // Mise à jour de la donnée
+        const index = fonctions.findIndex(f => f.id === id);
+        fonctions[index].personne = personne;
+
+        // Mise à jour visuelle immédiate
+        document.getElementById(`img-${id}`).src = personne.image;
+        document.getElementById(`img-${id}`).style.display = "block";
+        document.getElementById(`nom-${id}`).textContent = personne.nom;
+      } catch (e) {
+        alert("Personne non trouvée sur Wikipedia");
+      }
+    };
+
+    // 5. VALIDATION ET FIREBASE
     document.getElementById("validerBtn").addEventListener("click", async () => {
-      // Enregistrement des statistiques globales dans Firebase
+      const params = new URLSearchParams();
+      
       for (const f of fonctions) {
-        if (f.personne && f.personne.nom) {
-          const personRef = doc(db, "stats_globales", f.personne.nom);
-          await setDoc(personRef, { 
-            nom: f.personne.nom, 
-            votes: increment(1) 
-          }, { merge: true });
+        if (f.personne) {
+          params.append(f.titre, JSON.stringify(f.personne));
+          
+          // Enregistrement Firebase
+          try {
+            const docRef = doc(db, "stats_globales", f.personne.nom);
+            await setDoc(docRef, { nom: f.personne.nom, votes: increment(1) }, { merge: true });
+          } catch (err) { console.error("Erreur Firebase:", err); }
         }
       }
 
-      // Génération du lien de partage
-      const params = new URLSearchParams();
-      fonctions.forEach(f => { if (f.personne) params.append(f.nom, JSON.stringify(f.personne)); });
-      const url = `${location.origin}${location.pathname.replace("index.html", "tableau.html")}?${params.toString()}`;
+      const finalUrl = `${window.location.origin}${window.location.pathname.replace("index.html", "")}tableau.html?${params.toString()}`;
       
+      document.getElementById("generatedLink").value = finalUrl;
       document.getElementById("overlay").style.display = "flex";
-      document.getElementById("generatedLink").value = url;
     });
 
-    // Initialisation au chargement
-    window.onload = () => { afficherFonctions(); };
+    // BOUTONS POPUP
+    document.getElementById("closePopup").onclick = () => document.getElementById("overlay").style.display = "none";
+    document.getElementById("copyLinkBtn").onclick = () => {
+      document.getElementById("generatedLink").select();
+      document.execCommand("copy");
+      alert("Lien copié !");
+    };
+    document.getElementById("goToTableBtn").onclick = () => {
+      window.location.href = document.getElementById("generatedLink").value;
+    };
+
+    // Lancement initial
+    renderGrid();
   </script>
 </body>
 </html>
