@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="fr">
+<body>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, doc, setDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    // REMPLACE CECI par tes clés Firebase (Paramètres du projet > Applications)
+    const firebaseConfig = {
+      apiKey: "TON_API_KEY",
+      authDomain: "severance-2025.firebaseapp.com",
+      projectId: "severance-2025",
+      appId: "TON_APP_ID"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Tes données de fonctions
+    const fonctions = [
+      { nom: "Président de la République", personne: null },
+      { nom: "Premier Ministre", personne: null },
+      // ... (Remets bien toute ta liste ici)
+    ];
+
+    // --- Garde ici toute ta fonction afficherFonctions() actuelle ---
+
+    document.getElementById("validerBtn").addEventListener("click", async () => {
+      // Enregistrement des statistiques globales dans Firebase
+      for (const f of fonctions) {
+        if (f.personne && f.personne.nom) {
+          const personRef = doc(db, "stats_globales", f.personne.nom);
+          await setDoc(personRef, { 
+            nom: f.personne.nom, 
+            votes: increment(1) 
+          }, { merge: true });
+        }
+      }
+
+      // Génération du lien de partage
+      const params = new URLSearchParams();
+      fonctions.forEach(f => { if (f.personne) params.append(f.nom, JSON.stringify(f.personne)); });
+      const url = `${location.origin}${location.pathname.replace("index.html", "tableau.html")}?${params.toString()}`;
+      
+      document.getElementById("overlay").style.display = "flex";
+      document.getElementById("generatedLink").value = url;
+    });
+
+    // Initialisation au chargement
+    window.onload = () => { afficherFonctions(); };
+  </script>
+</body>
+</html>
