@@ -5,152 +5,73 @@
   <title>Statistiques - Mon Gouvernement Idéal</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@700&family=Dancing+Script:wght@700&display=swap');
-
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(to right, #002366 33%, #ffffff 34% 66%, #ce1126 67%);
-      min-height: 100vh;
-    }
-    .container {
-      max-width: 900px;
-      margin: 0 auto;
-      background: #f5f5f5;
-      min-height: 100vh;
-      padding-bottom: 50px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.2);
-    }
-    header {
-      width: 100%;
-      height: 200px;
-      background: white url('https://github.com/gorillaz-2102/Political-Severance/raw/main/header_banner.jpg') center center no-repeat;
-      background-size: contain;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-      align-items: center;
-      padding-bottom: 20px;
-    }
-    h1 {
-      font-family: 'Dancing Script', cursive;
-      color: #002366;
-      font-size: 2.5em;
-      margin: 0;
-    }
-    h2 {
-      font-family: 'Roboto Condensed', sans-serif;
-      color: #333;
-      text-transform: uppercase;
-      border-bottom: 2px solid #002366;
-      padding-bottom: 5px;
-      margin: 40px 20px 20px;
-    }
-    table {
-      width: calc(100% - 40px);
-      margin: 0 20px;
-      border-collapse: collapse;
-      background: white;
-    }
-    th, td {
-      padding: 12px;
-      text-align: left;
-      border-bottom: 1px solid #ddd;
-    }
-    th {
-      background-color: #002366;
-      color: white;
-      text-transform: uppercase;
-    }
-    .return-btn {
-      display: inline-block;
-      margin: 20px;
-      padding: 10px 20px;
-      background: #ce1126;
-      color: white;
-      text-decoration: none;
-      border-radius: 5px;
-      font-weight: bold;
-    }
+    body { margin: 0; font-family: 'Segoe UI', sans-serif; background: linear-gradient(to right, #002366 33%, #ffffff 34% 66%, #ce1126 67%); min-height: 100vh; }
+    .container { max-width: 900px; margin: 0 auto; background: #f5f5f5; min-height: 100vh; padding-bottom: 50px; box-shadow: 0 0 20px rgba(0,0,0,0.2); }
+    header { width: 100%; height: 200px; background: white url('https://github.com/gorillaz-2102/Political-Severance/raw/main/header_banner.jpg') center center no-repeat; background-size: contain; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 20px; }
+    h1 { font-family: 'Dancing Script', cursive; color: #002366; font-size: 2.5em; margin: 0; }
+    h2 { font-family: 'Roboto Condensed', sans-serif; color: #333; text-transform: uppercase; border-bottom: 2px solid #002366; padding-bottom: 5px; margin: 40px 20px 20px; }
+    table { width: calc(100% - 40px); margin: 0 20px; border-collapse: collapse; background: white; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+    th { background-color: #002366; color: white; text-transform: uppercase; }
+    .return-btn { display: inline-block; margin: 20px; padding: 10px 20px; background: #ce1126; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }
   </style>
 </head>
 <body>
   <div class="container">
-    <header>
-      <h1>Tableau du Gouvernement</h1>
-    </header>
-
+    <header><h1>Tableau du Gouvernement</h1></header>
     <h2>Ton Équipe</h2>
     <table id="table-fonctions">
-      <thead>
-        <tr>
-          <th>Fonction</th>
-          <th>Titulaire</th>
-        </tr>
-      </thead>
+      <thead><tr><th>Fonction</th><th>Titulaire</th></tr></thead>
       <tbody></tbody>
     </table>
-
     <h2>Top 10 Global (Firebase)</h2>
     <table id="table-populaires">
-      <thead>
-        <tr>
-          <th>Personnalité</th>
-          <th>Sélections totales</th>
-        </tr>
-      </thead>
+      <thead><tr><th>Personnalité</th><th>Sélections</th></tr></thead>
       <tbody></tbody>
     </table>
-
     <a class="return-btn" href="index.html">⬅ Créer un autre gouvernement</a>
   </div>
 
- <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getFirestore, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-  // TODO: Remplace par tes clés réelles de la console Firebase
-  const firebaseConfig = {
-    apiKey: "TON_API_KEY",
-    authDomain: "severance-2025.firebaseapp.com",
-    projectId: "severance-2025",
-    appId: "TON_APP_ID"
-  };
+    // REMPLACE par tes clés Severance-2025
+    const firebaseConfig = {
+      apiKey: "TON_API_KEY",
+      authDomain: "severance-2025.firebaseapp.com",
+      projectId: "severance-2025",
+      appId: "TON_APP_ID"
+    };
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-  // 1. Lecture des données de l'URL (pour TON gouvernement)
-  const params = new URLSearchParams(window.location.search);
-  const tbodyFonctions = document.querySelector("#table-fonctions tbody");
-  
-  params.forEach((value, key) => {
-    let personne;
-    try { 
-      personne = JSON.parse(value); 
-    } catch(e) { 
-      personne = {nom: value}; 
-    }
-    const tr = document.createElement("tr");
-    tr.innerHTML = `<td><b>${key}</b></td><td>${personne.nom}</td>`;
-    tbodyFonctions.appendChild(tr);
-  });
-
-  // 2. Lecture de Firebase (pour les statistiques de TOUT LE MONDE)
-  async function chargerStatsGlobales() {
-    const q = query(collection(db, "stats_globales"), orderBy("votes", "desc"), limit(10));
-    const querySnapshot = await getDocs(q);
-    const tbodyPopulaires = document.querySelector("#table-populaires tbody");
-    
-    tbodyPopulaires.innerHTML = ""; 
-    querySnapshot.forEach((doc) => {
-      const data = doc.data();
+    // 1. Lire les données depuis l'URL (Correctif pour l'index)
+    const params = new URLSearchParams(window.location.search);
+    const tbodyFonctions = document.querySelector("#table-fonctions tbody");
+    params.forEach((value, key) => {
+      let personne;
+      try { personne = JSON.parse(value); } catch(e) { personne = {nom: value}; }
       const tr = document.createElement("tr");
-      tr.innerHTML = `<td>${data.nom}</td><td>${data.votes} fois</td>`;
-      tbodyPopulaires.appendChild(tr);
+      tr.innerHTML = `<td><b>${key}</b></td><td>${personne.nom}</td>`;
+      tbodyFonctions.appendChild(tr);
     });
-  }
 
-  chargerStatsGlobales();
-</script>
+    // 2. Charger les stats de Firebase
+    async function chargerStatsGlobales() {
+      const q = query(collection(db, "stats_globales"), orderBy("votes", "desc"), limit(10));
+      const querySnapshot = await getDocs(q);
+      const tbodyPopulaires = document.querySelector("#table-populaires tbody");
+      tbodyPopulaires.innerHTML = ""; 
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${data.nom}</td><td>${data.votes} fois</td>`;
+        tbodyPopulaires.appendChild(tr);
+      });
+    }
+    chargerStatsGlobales();
+  </script>
 </body>
 </html>
