@@ -40,9 +40,9 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, collection, query, orderBy, limit, getDocs, doc, setDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // CONFIGURATION FIREBASE (À remplir avec tes clés)
+    // CONFIGURATION FIREBASE
     const firebaseConfig = {
       apiKey: "AIzaSyD6SEEWeN36C1_aJN6BWsmJU-YXCfwQc7g",
       authDomain: "severance-2025.firebaseapp.com",
@@ -53,10 +53,44 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // 1. AFFICHAGE DES RÉSULTATS DE L'URL
     const params = new URLSearchParams(window.location.search);
     const tbodyLocal = document.querySelector("#table-fonctions tbody");
-    
+
+    // --- 1. ENREGISTRER LES VOTES AVEC SÉCURITÉ ---
+    async function saveVotes() {
+      const selectionId = params.toString(); 
+      const dejaVote = localStorage.getItem("dernier_vote");
+
+      // Si l'utilisateur a déjà voté pour cette sélection exacte, on saute l'écriture
+      if (dejaVote === selectionId) {
+        console.log("Vote déjà enregistré pour cette session.");
+        loadGlobalStats();
+        return;
+      }
+
+      for (const [key, value] of params) {
+        let nom;
+        try { 
+          nom = JSON.parse(value).nom; 
+        } catch(e) { 
+          nom = value; 
+        }
+
+        if (nom && nom !== "null" && nom !== "") {
+          const docRef = doc(db, "stats_globales", nom); 
+          await setDoc(docRef, { 
+            nom: nom, 
+            votes: increment(1) 
+          }, { merge: true });
+        }
+      }
+
+      // Marquer comme voté pour éviter le spam au rafraîchissement
+      localStorage.setItem("dernier_vote", selectionId);
+      loadGlobalStats();
+    }
+
+    // --- 2. AFFICHAGE DE LA SÉLECTION LOCALE ---
     params.forEach((value, key) => {
       let personne;
       try { 
@@ -73,7 +107,7 @@
       tbodyLocal.appendChild(tr);
     });
 
-    // 2. CHARGEMENT DU TOP 10 DEPUIS FIREBASE
+    // --- 3. CHARGEMENT DU TOP 10 DEPUIS FIREBASE ---
     async function loadGlobalStats() {
       try {
         const q = query(collection(db, "stats_globales"), orderBy("votes", "desc"), limit(10));
@@ -92,7 +126,8 @@
       }
     }
     
-    loadGlobalStats();
+    // Lancement
+    saveVotes();
   </script>
 </body>
 </html>
