@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mon Gouvernement Idéal</title>
   
-  <!-- Métadonnées pour le partage -->
+  <!-- Métadonnées pour le partage (Suppression totale de Daruma) -->
   <meta property="og:title" content="Mon Gouvernement Idéal">
   <meta property="og:description" content="Créez et partagez votre équipe gouvernementale idéale.">
   <meta name="description" content="Plateforme de simulation pour créer votre gouvernement idéal.">
@@ -198,13 +198,26 @@
       });
     }
 
+    // Fonction de recherche améliorée pour trouver Juan Branco et autres
     window.searchWiki = async (id) => {
       const input = document.getElementById(`input-${id}`);
-      const query = input.value;
+      let query = input.value.trim();
       if (!query) return;
 
       try {
-        const response = await fetch(`https://fr.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`);
+        // Étape 1 : On cherche d'abord le titre exact via l'API de recherche pour plus de flexibilité
+        const searchUrl = `https://fr.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&origin=*`;
+        const searchRes = await fetch(searchUrl);
+        const searchData = await searchRes.json();
+        
+        if (searchData.query.search.length > 0) {
+          // On prend le titre le plus pertinent (ex: "Juan Branco")
+          query = searchData.query.search[0].title;
+        }
+
+        // Étape 2 : On récupère le résumé avec le titre propre
+        const summaryUrl = `https://fr.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`;
+        const response = await fetch(summaryUrl);
         const data = await response.json();
         
         const personne = {
@@ -222,7 +235,9 @@
         
         const nomContainer = document.getElementById(`nom-${f.id}`);
         nomContainer.innerHTML = `<a href="${personne.url}" target="_blank" class="wiki-link-active">${personne.nom} 🔗</a>`;
-      } catch (e) { alert("Personne non trouvée sur Wikipédia."); }
+      } catch (e) { 
+        alert("Personne non trouvée. Essayez d'être plus précis (ex: Juan Branco)."); 
+      }
     };
 
     async function loadTrends() {
