@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mon Gouvernement Idéal</title>
   
-  <!-- Métadonnées pour le partage (Suppression totale de Daruma) -->
+  <!-- Métadonnées pour le partage -->
   <meta property="og:title" content="Mon Gouvernement Idéal">
   <meta property="og:description" content="Créez et partagez votre équipe gouvernementale idéale.">
   <meta name="description" content="Plateforme de simulation pour créer votre gouvernement idéal.">
@@ -57,6 +57,7 @@
       font-weight: bold;
       margin-top: 5px;
       font-size: 0.9em;
+      display: block;
     }
 
     /* Section Tendances */
@@ -79,15 +80,15 @@
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      gap: 15px;
+      gap: 10px;
       list-style: none;
       padding: 0;
     }
     .trend-item {
       background: #f0f4f8;
-      padding: 8px 15px;
+      padding: 6px 12px;
       border-radius: 20px;
-      font-size: 0.9em;
+      font-size: 0.85em;
       color: #333;
       border: 1px solid #d1d9e6;
     }
@@ -118,8 +119,8 @@
     <div id="government-grid" class="grid"></div>
 
     <div class="trends-section">
-      <h2>🔥 Personnalités les plus choisies</h2>
-      <div id="trends-loading" style="text-align:center; color:#666;">Chargement des tendances...</div>
+      <h2>🔥 Les plus choisis par les citoyens</h2>
+      <div id="trends-loading" style="text-align:center; color:#666;">Chargement des statistiques...</div>
       <ul id="trends-list" class="trends-list"></ul>
     </div>
 
@@ -131,7 +132,7 @@
   <div id="overlay">
     <div class="popup">
       <h2>Gouvernement Prêt !</h2>
-      <p>Partagez votre équipe avec ce lien :</p>
+      <p>Copiez ce lien pour partager votre équipe :</p>
       <textarea id="generatedLink" readonly></textarea>
       <div class="popup-btns">
         <button id="copyLinkBtn">Copier le lien</button>
@@ -198,28 +199,36 @@
       });
     }
 
-    // Fonction de recherche améliorée pour trouver Juan Branco et autres
+    // Recherche Wikipédia améliorée (Recherche + Résumé)
     window.searchWiki = async (id) => {
       const input = document.getElementById(`input-${id}`);
       let query = input.value.trim();
       if (!query) return;
 
+      const btn = input.nextElementSibling;
+      btn.innerText = "...";
+      btn.disabled = true;
+
       try {
-        // Étape 1 : On cherche d'abord le titre exact via l'API de recherche pour plus de flexibilité
+        // 1. On cherche d'abord le titre le plus probable
         const searchUrl = `https://fr.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&origin=*`;
         const searchRes = await fetch(searchUrl);
         const searchData = await searchRes.json();
         
+        let targetTitle = query;
         if (searchData.query.search.length > 0) {
-          // On prend le titre le plus pertinent (ex: "Juan Branco")
-          query = searchData.query.search[0].title;
+          targetTitle = searchData.query.search[0].title;
         }
 
-        // Étape 2 : On récupère le résumé avec le titre propre
-        const summaryUrl = `https://fr.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`;
-        const response = await fetch(summaryUrl);
-        const data = await response.json();
+        // 2. On récupère le résumé avec le titre propre
+        const summaryUrl = `https://fr.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(targetTitle)}`;
+        const summaryRes = await fetch(summaryUrl);
+        const data = await summaryRes.json();
         
+        if (data.type === "disambiguation" || data.status === 404) {
+          throw new Error("Pas de fiche précise.");
+        }
+
         const personne = {
           nom: data.title,
           image: data.thumbnail ? data.thumbnail.source : 'https://via.placeholder.com/80',
@@ -236,10 +245,14 @@
         const nomContainer = document.getElementById(`nom-${f.id}`);
         nomContainer.innerHTML = `<a href="${personne.url}" target="_blank" class="wiki-link-active">${personne.nom} 🔗</a>`;
       } catch (e) { 
-        alert("Personne non trouvée. Essayez d'être plus précis (ex: Juan Branco)."); 
+        alert("Personne non trouvée. Précisez le nom complet (ex: Juan Branco)."); 
+      } finally {
+        btn.innerText = "🔍";
+        btn.disabled = false;
       }
     };
 
+    // Chargement des tendances optimisé pour ne pas bloquer le thread (fix INP)
     async function loadTrends() {
       try {
         if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
@@ -248,16 +261,13 @@
           await signInAnonymously(auth);
         }
 
-        const user = auth.currentUser;
-        if (!user) return;
-
         const statsCol = collection(db, 'artifacts', appId, 'public', 'data', 'stats_globales');
         const snap = await getDocs(statsCol);
         
-        setTimeout(() => {
+        // On traite le tri en asynchrone pour libérer l'UI
+        requestAnimationFrame(() => {
           const allStats = [];
           snap.forEach(docSnap => allStats.push(docSnap.data()));
-
           allStats.sort((a, b) => (b.votes || 0) - (a.votes || 0));
           const top10 = allStats.slice(0, 10);
 
@@ -273,35 +283,39 @@
               list.appendChild(li);
             });
           }
-        }, 0);
+        });
       } catch (err) {
-        console.error("Erreur tendances:", err);
-        const loading = document.getElementById("trends-loading");
-        if (loading) loading.innerText = "Tendances indisponibles.";
+        console.error("Trends Error:", err);
       }
     }
 
+    // Validation optimisée (fix INP 4s)
     document.getElementById("validerBtn").onclick = () => {
       const btn = document.getElementById("validerBtn");
-      const originalText = btn.innerText;
-      
       btn.innerText = "Génération...";
       btn.disabled = true;
 
+      // On laisse une frame au navigateur pour afficher "Génération..."
       setTimeout(() => {
         const params = new URLSearchParams();
         let hasData = false;
-        fonctions.forEach(f => {
+        
+        // On ne stringify que ce qui est nécessaire pour l'URL
+        for (const f of fonctions) {
           if (f.personne) {
-            params.append(f.titre, JSON.stringify(f.personne));
+            params.append(f.titre, JSON.stringify({
+              nom: f.personne.nom,
+              image: f.personne.image,
+              url: f.personne.url
+            }));
             hasData = true;
           }
-        });
+        }
 
         if(!hasData) {
-          btn.innerText = originalText;
+          btn.innerText = "🇫🇷 VALIDER MON GOUVERNEMENT";
           btn.disabled = false;
-          return alert("Veuillez sélectionner au moins un membre.");
+          return alert("Choisissez au moins un membre !");
         }
 
         const baseUrl = window.location.origin + window.location.pathname.replace('index.html', '');
@@ -311,15 +325,14 @@
         document.getElementById("generatedLink").value = finalUrl;
         document.getElementById("overlay").style.display = "flex";
         
-        btn.innerText = originalText;
+        btn.innerText = "🇫🇷 VALIDER MON GOUVERNEMENT";
         btn.disabled = false;
       }, 50);
     };
 
     document.getElementById("closePopup").onclick = () => document.getElementById("overlay").style.display = "none";
     document.getElementById("copyLinkBtn").onclick = () => {
-      const linkArea = document.getElementById("generatedLink");
-      linkArea.select();
+      document.getElementById("generatedLink").select();
       document.execCommand("copy");
       alert("Lien copié !");
     };
