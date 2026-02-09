@@ -90,6 +90,7 @@
     .footer-actions { padding: 30px; text-align: center; background: #eee; border-top: 2px solid #ddd; }
     #validerBtn { padding: 15px 40px; font-size: 1.2em; background: #28a745; color: white; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; transition: 0.3s; }
     #validerBtn:hover { background: #218838; transform: scale(1.05); }
+    #validerBtn:disabled { background: #ccc; cursor: not-allowed; transform: none; }
 
     /* Overlay Popup */
     #overlay {
@@ -97,7 +98,7 @@
       background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 1000;
     }
     .popup { background: white; padding: 30px; border-radius: 10px; max-width: 500px; width: 90%; text-align: center; }
-    textarea { width: 100%; height: 80px; margin: 15px 0; padding: 10px; border-radius: 5px; border: 1px solid #ccc; resize: none; }
+    textarea { width: 100%; height: 80px; margin: 15px 0; padding: 10px; border-radius: 5px; border: 1px solid #ccc; resize: none; font-family: monospace; font-size: 0.8em; }
     .popup-btns { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
   </style>
 </head>
@@ -139,7 +140,6 @@
     import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    // Utilisation de la configuration globale fournie par l'environnement pour éviter les erreurs de referer
     const firebaseConfig = typeof __firebase_config !== 'undefined' 
       ? JSON.parse(__firebase_config) 
       : {
@@ -193,7 +193,8 @@
     }
 
     window.searchWiki = async (id) => {
-      const query = document.getElementById(`input-${id}`).value;
+      const input = document.getElementById(`input-${id}`);
+      const query = input.value;
       if (!query) return;
 
       try {
@@ -209,18 +210,17 @@
         const index = fonctions.findIndex(f => f.id === id);
         fonctions[index].personne = personne;
 
-        const img = document.getElementById(`img-${id}`);
+        const img = document.getElementById(`img-${f.id}`);
         img.src = personne.image;
         img.style.display = "block";
         
-        const nomContainer = document.getElementById(`nom-${id}`);
+        const nomContainer = document.getElementById(`nom-${f.id}`);
         nomContainer.innerHTML = `<a href="${personne.url}" target="_blank" class="wiki-link-active">${personne.nom} 🔗</a>`;
       } catch (e) { alert("Personne non trouvée sur Wikipédia."); }
     };
 
     async function loadTrends() {
       try {
-        // RÈGLE 3 : Authentification via jeton personnalisé ou anonyme
         if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
           await signInWithCustomToken(auth, __initial_auth_token);
         } else {
@@ -230,56 +230,75 @@
         const user = auth.currentUser;
         if (!user) return;
 
-        // RÈGLE 1 : Chemin strict pour les données publiques
         const statsCol = collection(db, 'artifacts', appId, 'public', 'data', 'stats_globales');
         const snap = await getDocs(statsCol);
         
-        const allStats = [];
-        snap.forEach(docSnap => allStats.push(docSnap.data()));
+        setTimeout(() => {
+          const allStats = [];
+          snap.forEach(docSnap => allStats.push(docSnap.data()));
 
-        // RÈGLE 2 : Tri en mémoire locale pour éviter les index complexes
-        allStats.sort((a, b) => (b.votes || 0) - (a.votes || 0));
-        const top10 = allStats.slice(0, 10);
+          allStats.sort((a, b) => (b.votes || 0) - (a.votes || 0));
+          const top10 = allStats.slice(0, 10);
 
-        const list = document.getElementById("trends-list");
-        document.getElementById("trends-loading").style.display = "none";
-        list.innerHTML = "";
-
-        top10.forEach(item => {
-          const li = document.createElement("li");
-          li.className = "trend-item";
-          li.innerHTML = `${item.nom} (<b>${item.votes || 0}</b>)`;
-          list.appendChild(li);
-        });
+          const list = document.getElementById("trends-list");
+          const loading = document.getElementById("trends-loading");
+          if (loading) loading.style.display = "none";
+          if (list) {
+            list.innerHTML = "";
+            top10.forEach(item => {
+              const li = document.createElement("li");
+              li.className = "trend-item";
+              li.innerHTML = `${item.nom} (<b>${item.votes || 0}</b>)`;
+              list.appendChild(li);
+            });
+          }
+        }, 0);
       } catch (err) {
         console.error("Erreur tendances:", err);
-        document.getElementById("trends-loading").innerText = "Tendances indisponibles.";
+        const loading = document.getElementById("trends-loading");
+        if (loading) loading.innerText = "Tendances indisponibles.";
       }
     }
 
     document.getElementById("validerBtn").onclick = () => {
-      const params = new URLSearchParams();
-      let hasData = false;
-      fonctions.forEach(f => {
-        if (f.personne) {
-          params.append(f.titre, JSON.stringify(f.personne));
-          hasData = true;
-        }
-      });
-
-      if(!hasData) return alert("Veuillez sélectionner au moins un membre.");
-
-      const baseUrl = window.location.origin + window.location.pathname.replace('index.html', '');
-      const separator = baseUrl.endsWith('/') ? '' : '/';
-      const finalUrl = `${baseUrl}${separator}tableau.html?${params.toString()}`;
+      const btn = document.getElementById("validerBtn");
+      const originalText = btn.innerText;
       
-      document.getElementById("generatedLink").value = finalUrl;
-      document.getElementById("overlay").style.display = "flex";
+      btn.innerText = "Génération...";
+      btn.disabled = true;
+
+      setTimeout(() => {
+        const params = new URLSearchParams();
+        let hasData = false;
+        fonctions.forEach(f => {
+          if (f.personne) {
+            params.append(f.titre, JSON.stringify(f.personne));
+            hasData = true;
+          }
+        });
+
+        if(!hasData) {
+          btn.innerText = originalText;
+          btn.disabled = false;
+          return alert("Veuillez sélectionner au moins un membre.");
+        }
+
+        const baseUrl = window.location.origin + window.location.pathname.replace('index.html', '');
+        const separator = baseUrl.endsWith('/') ? '' : '/';
+        const finalUrl = `${baseUrl}${separator}tableau.html?${params.toString()}`;
+        
+        document.getElementById("generatedLink").value = finalUrl;
+        document.getElementById("overlay").style.display = "flex";
+        
+        btn.innerText = originalText;
+        btn.disabled = false;
+      }, 50);
     };
 
     document.getElementById("closePopup").onclick = () => document.getElementById("overlay").style.display = "none";
     document.getElementById("copyLinkBtn").onclick = () => {
-      document.getElementById("generatedLink").select();
+      const linkArea = document.getElementById("generatedLink");
+      linkArea.select();
       document.execCommand("copy");
       alert("Lien copié !");
     };
@@ -289,4 +308,7 @@
     loadTrends();
   </script>
 </body>
+</html>
+
+  
 </html>
