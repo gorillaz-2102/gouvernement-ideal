@@ -5,10 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mon Gouvernement Idéal</title>
   
-  <!-- Métadonnées pour le partage -->
   <meta property="og:title" content="Mon Gouvernement Idéal">
   <meta property="og:description" content="Créez et partagez votre équipe gouvernementale idéale.">
-  <meta name="description" content="Plateforme de simulation pour créer votre gouvernement idéal.">
 
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@700&family=Dancing+Script:wght@700&display=swap');
@@ -22,13 +20,11 @@
     .container {
       max-width: 1150px; margin: 0 auto; background: #f5f5f5;
       min-height: 100vh; display: flex; flex-direction: column;
-      position: relative; z-index: 1;
     }
     header {
       width: 100%; height: 280px;
       background: white url('https://github.com/gorillaz-2102/Political-Severance/raw/main/header_banner.jpg') top center no-repeat;
-      background-size: contain; display: flex; flex-direction: column;
-      justify-content: center; align-items: center; text-align: center;
+      background-size: contain; display: flex; justify-content: center; align-items: center; text-align: center;
     }
     h1 { font-family: 'Dancing Script', cursive; color: #002366; font-size: 3.5em; margin: 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.1); }
     
@@ -39,105 +35,51 @@
     .card {
       background: white; border-radius: 12px; padding: 20px;
       box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-top: 5px solid #002366;
-      display: flex; flex-direction: column; align-items: center; transition: 0.3s;
+      display: flex; flex-direction: column; align-items: center;
     }
-    .card:hover { transform: translateY(-5px); }
     .role-name { font-family: 'Roboto Condensed', sans-serif; font-size: 1.1em; margin-bottom: 15px; color: #333; text-align: center; height: 45px; font-weight: bold; }
     
     .search-box { width: 100%; display: flex; gap: 5px; margin-bottom: 10px; }
     input { flex-grow: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
     button { padding: 8px 12px; cursor: pointer; border: none; border-radius: 4px; background: #002366; color: white; font-weight: bold; }
-    button:hover { background: #ce1126; }
 
     .result-img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-top: 10px; border: 2px solid #eee; display: none; }
-    
-    .wiki-link-active {
-      color: #002366;
-      text-decoration: underline;
-      font-weight: bold;
-      margin-top: 5px;
-      font-size: 0.9em;
-      display: block;
-    }
+    .wiki-link { color: #002366; text-decoration: underline; font-weight: bold; font-size: 0.9em; margin-top: 5px; display: block; }
 
-    /* Section Tendances */
-    .trends-section {
-      padding: 30px;
-      background: #fff;
-      border-top: 5px solid #ce1126;
-      margin: 20px 30px;
-      border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-    }
-    .trends-section h2 {
-      font-family: 'Roboto Condensed', sans-serif;
-      color: #002366;
-      margin-top: 0;
-      text-align: center;
-      text-transform: uppercase;
-    }
-    .trends-list {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 10px;
-      list-style: none;
-      padding: 0;
-    }
-    .trend-item {
-      background: #f0f4f8;
-      padding: 6px 12px;
-      border-radius: 20px;
-      font-size: 0.85em;
-      color: #333;
-      border: 1px solid #d1d9e6;
-    }
-    .trend-item b { color: #ce1126; }
+    .trends-section { padding: 30px; background: #fff; border-top: 5px solid #ce1126; margin: 20px 30px; border-radius: 12px; }
+    .trends-list { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; list-style: none; padding: 0; }
+    .trend-item { background: #f0f4f8; padding: 6px 12px; border-radius: 20px; font-size: 0.85em; border: 1px solid #d1d9e6; }
 
     .footer-actions { padding: 30px; text-align: center; background: #eee; border-top: 2px solid #ddd; }
-    #validerBtn { padding: 15px 40px; font-size: 1.2em; background: #28a745; color: white; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; transition: 0.3s; }
-    #validerBtn:hover { background: #218838; transform: scale(1.05); }
-    #validerBtn:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+    #validerBtn { padding: 15px 40px; font-size: 1.2em; background: #28a745; color: white; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; }
 
-    /* Overlay Popup */
-    #overlay {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 1000;
-    }
+    #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 1000; }
     .popup { background: white; padding: 30px; border-radius: 10px; max-width: 500px; width: 90%; text-align: center; }
-    textarea { width: 100%; height: 80px; margin: 15px 0; padding: 10px; border-radius: 5px; border: 1px solid #ccc; resize: none; font-family: monospace; font-size: 0.8em; }
-    .popup-btns { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+    textarea { width: 100%; height: 80px; margin: 15px 0; padding: 10px; border-radius: 5px; resize: none; }
   </style>
 </head>
 <body>
 
   <div class="container">
-    <header>
-      <h1>Mon Gouvernement Idéal</h1>
-    </header>
-
+    <header><h1>Mon Gouvernement Idéal</h1></header>
     <div id="government-grid" class="grid"></div>
 
     <div class="trends-section">
-      <h2>🔥 Les plus choisis par les citoyens</h2>
-      <div id="trends-loading" style="text-align:center; color:#666;">Chargement des statistiques...</div>
-      <ul id="trends-list" class="trends-list"></ul>
+      <h2 style="text-align:center; font-family:'Roboto Condensed';">🔥 Les plus choisis par les citoyens</h2>
+      <ul id="trends-list" class="trends-list"><li id="loading-txt">Chargement...</li></ul>
     </div>
 
-    <div class="footer-actions">
-      <button id="validerBtn">🇫🇷 VALIDER MON GOUVERNEMENT</button>
-    </div>
+    <div class="footer-actions"><button id="validerBtn">🇫🇷 VALIDER MON GOUVERNEMENT</button></div>
   </div>
 
   <div id="overlay">
     <div class="popup">
-      <h2>Gouvernement Prêt !</h2>
-      <p>Copiez ce lien pour partager votre équipe :</p>
+      <h2>Partager mon équipe</h2>
       <textarea id="generatedLink" readonly></textarea>
-      <div class="popup-btns">
-        <button id="copyLinkBtn">Copier le lien</button>
-        <button id="goToTableBtn" style="background:#002366; color:white; padding: 10px 20px; border:none; border-radius:4px; cursor:pointer;">Voir le Tableau</button>
-        <button id="closePopup" style="background:#aaa; color:white; padding: 10px 20px; border:none; border-radius:4px; cursor:pointer;">Fermer</button>
+      <div style="display:flex; gap:10px; justify-content:center;">
+        <button id="copyLinkBtn">Copier</button>
+        <button id="goToTableBtn" style="background:#002366">Voir</button>
+        <button onclick="document.getElementById('overlay').style.display='none'" style="background:#aaa">Fermer</button>
       </div>
     </div>
   </div>
@@ -147,199 +89,103 @@
     import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    const firebaseConfig = typeof __firebase_config !== 'undefined' 
-      ? JSON.parse(__firebase_config) 
-      : {
-          apiKey: "AIzaSyD6SEEWeN36C1_aJN6BWsmJU-YXCfwQc7g",
-          authDomain: "severance-2025.firebaseapp.com",
-          projectId: "severance-2025",
-          appId: "1:915954379713:web:cc42c4f1c95e4b24b25d40"
-        };
-
+    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "AIzaSyD6SEEWeN36C1_aJN6BWsmJU-YXCfwQc7g", authDomain: "severance-2025.firebaseapp.com", projectId: "severance-2025", appId: "1:915954379713:web:cc42c4f1c95e4b24b25d40" };
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'severance-2025';
 
-    const fonctions = [
-      { id: 1, titre: "Président de la République", personne: null },
-      { id: 2, titre: "Premier Ministre", personne: null },
-      { id: 3, titre: "Ministre de l'Intérieur", personne: null },
-      { id: 4, titre: "Ministre de la Justice", personne: null },
-      { id: 5, titre: "Ministre des Affaires Étrangères", personne: null },
-      { id: 6, titre: "Ministre des Armées", personne: null },
-      { id: 7, titre: "Ministre de l'Éducation Nationale", personne: null },
-      { id: 8, titre: "Ministre de l'Économie et des Finances", personne: null },
-      { id: 9, titre: "Ministre de la Santé", personne: null },
-      { id: 10, titre: "Ministre de l'Environnement", personne: null },
-      { id: 11, titre: "Ministre de la Culture", personne: null },
-      { id: 12, titre: "Ministre de l'Agriculture", personne: null },
-      { id: 13, titre: "Ministre du Travail", personne: null },
-      { id: 14, titre: "Ministre des Outre-mer", personne: null },
-      { id: 15, titre: "Ministre des Sports", personne: null }
-    ];
-
-    const grid = document.getElementById("government-grid");
+    const fonctions = ["Président de la République", "Premier Ministre", "Ministre de l'Intérieur", "Ministre de la Justice", "Ministre des Affaires Étrangères", "Ministre des Armées", "Ministre de l'Éducation Nationale", "Ministre de l'Économie", "Ministre de la Santé", "Ministre de l'Environnement", "Ministre de la Culture", "Ministre de l'Agriculture", "Ministre du Travail", "Ministre des Outre-mer", "Ministre des Sports"].map((t, i) => ({ id: i, titre: t, personne: null }));
 
     function renderGrid() {
-      grid.innerHTML = "";
-      fonctions.forEach(f => {
-        const card = document.createElement("div");
-        card.className = "card";
-        card.innerHTML = `
+      const grid = document.getElementById("government-grid");
+      if (!grid) return;
+      grid.innerHTML = fonctions.map(f => `
+        <div class="card">
           <div class="role-name">${f.titre}</div>
           <div class="search-box">
-            <input type="text" id="input-${f.id}" placeholder="Chercher sur Wikipédia..." onkeypress="if(event.key==='Enter') window.searchWiki(${f.id})">
+            <input type="text" id="input-${f.id}" placeholder="Nom (ex: Juan Branco)" onkeypress="if(event.key==='Enter') window.searchWiki(${f.id})">
             <button onclick="window.searchWiki(${f.id})">🔍</button>
           </div>
           <img id="img-${f.id}" class="result-img">
           <div id="nom-${f.id}" style="text-align:center;"></div>
-        `;
-        grid.appendChild(card);
-      });
+        </div>
+      `).join('');
     }
 
-    // Recherche Wikipédia améliorée (Recherche + Résumé)
     window.searchWiki = async (id) => {
-      const input = document.getElementById(`input-${id}`);
-      let query = input.value.trim();
+      const query = document.getElementById(`input-${id}`).value.trim();
       if (!query) return;
-
-      const btn = input.nextElementSibling;
-      btn.innerText = "...";
-      btn.disabled = true;
-
       try {
-        // 1. On cherche d'abord le titre le plus probable
-        const searchUrl = `https://fr.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&origin=*`;
-        const searchRes = await fetch(searchUrl);
-        const searchData = await searchRes.json();
+        // Recherche du titre exact d'abord pour Juan Branco / De Villepin etc.
+        const search = await fetch(`https://fr.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&origin=*`).then(r => r.json());
+        const title = search.query.search.length > 0 ? search.query.search[0].title : query;
         
-        let targetTitle = query;
-        if (searchData.query.search.length > 0) {
-          targetTitle = searchData.query.search[0].title;
+        const data = await fetch(`https://fr.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`).then(r => r.json());
+        fonctions[id].personne = { nom: data.title, image: data.thumbnail ? data.thumbnail.source : 'https://via.placeholder.com/80', url: data.content_urls.desktop.page };
+        
+        const img = document.getElementById(`img-${id}`);
+        const nameDiv = document.getElementById(`nom-${id}`);
+        if (img) {
+          img.src = fonctions[id].personne.image;
+          img.style.display = "block";
         }
-
-        // 2. On récupère le résumé avec le titre propre
-        const summaryUrl = `https://fr.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(targetTitle)}`;
-        const summaryRes = await fetch(summaryUrl);
-        const data = await summaryRes.json();
-        
-        if (data.type === "disambiguation" || data.status === 404) {
-          throw new Error("Pas de fiche précise.");
+        if (nameDiv) {
+          nameDiv.innerHTML = `<a href="${fonctions[id].personne.url}" target="_blank" class="wiki-link">${fonctions[id].personne.nom} 🔗</a>`;
         }
-
-        const personne = {
-          nom: data.title,
-          image: data.thumbnail ? data.thumbnail.source : 'https://via.placeholder.com/80',
-          url: data.content_urls.desktop.page
-        };
-
-        const index = fonctions.findIndex(f => f.id === id);
-        fonctions[index].personne = personne;
-
-        const img = document.getElementById(`img-${f.id}`);
-        img.src = personne.image;
-        img.style.display = "block";
-        
-        const nomContainer = document.getElementById(`nom-${f.id}`);
-        nomContainer.innerHTML = `<a href="${personne.url}" target="_blank" class="wiki-link-active">${personne.nom} 🔗</a>`;
-      } catch (e) { 
-        alert("Personne non trouvée. Précisez le nom complet (ex: Juan Branco)."); 
-      } finally {
-        btn.innerText = "🔍";
-        btn.disabled = false;
-      }
+      } catch (e) { alert("Personne introuvable."); }
     };
 
-    // Chargement des tendances optimisé pour ne pas bloquer le thread (fix INP)
-    async function loadTrends() {
+    async function loadStats() {
+      const loader = document.getElementById("loading-txt");
+      const list = document.getElementById("trends-list");
+      
       try {
-        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-          await signInWithCustomToken(auth, __initial_auth_token);
-        } else {
-          await signInAnonymously(auth);
-        }
-
-        const statsCol = collection(db, 'artifacts', appId, 'public', 'data', 'stats_globales');
-        const snap = await getDocs(statsCol);
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) await signInWithCustomToken(auth, __initial_auth_token);
+        else await signInAnonymously(auth);
         
-        // On traite le tri en asynchrone pour libérer l'UI
-        requestAnimationFrame(() => {
-          const allStats = [];
-          snap.forEach(docSnap => allStats.push(docSnap.data()));
-          allStats.sort((a, b) => (b.votes || 0) - (a.votes || 0));
-          const top10 = allStats.slice(0, 10);
-
-          const list = document.getElementById("trends-list");
-          const loading = document.getElementById("trends-loading");
-          if (loading) loading.style.display = "none";
-          if (list) {
-            list.innerHTML = "";
-            top10.forEach(item => {
-              const li = document.createElement("li");
-              li.className = "trend-item";
-              li.innerHTML = `${item.nom} (<b>${item.votes || 0}</b>)`;
-              list.appendChild(li);
-            });
-          }
-        });
-      } catch (err) {
-        console.error("Trends Error:", err);
+        const snap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'stats_globales'));
+        const stats = []; snap.forEach(d => stats.push(d.data()));
+        stats.sort((a,b) => (b.votes||0)-(a.votes||0));
+        
+        if (list) {
+          list.innerHTML = stats.slice(0, 10).map(s => `<li class="trend-item">${s.nom} (<b>${s.votes||0}</b>)</li>`).join('');
+        }
+        // Pas besoin de cacher le loader car innerHTML l'a déjà remplacé, mais par sécurité :
+        if (loader) loader.style.display = "none";
+      } catch (e) { 
+        console.error(e);
+        if (loader) loader.innerText = "Stats indisponibles."; 
       }
     }
 
-    // Validation optimisée (fix INP 4s)
     document.getElementById("validerBtn").onclick = () => {
-      const btn = document.getElementById("validerBtn");
-      btn.innerText = "Génération...";
-      btn.disabled = true;
-
-      // On laisse une frame au navigateur pour afficher "Génération..."
-      setTimeout(() => {
-        const params = new URLSearchParams();
-        let hasData = false;
-        
-        // On ne stringify que ce qui est nécessaire pour l'URL
-        for (const f of fonctions) {
-          if (f.personne) {
-            params.append(f.titre, JSON.stringify({
-              nom: f.personne.nom,
-              image: f.personne.image,
-              url: f.personne.url
-            }));
-            hasData = true;
-          }
-        }
-
-        if(!hasData) {
-          btn.innerText = "🇫🇷 VALIDER MON GOUVERNEMENT";
-          btn.disabled = false;
-          return alert("Choisissez au moins un membre !");
-        }
-
-        const baseUrl = window.location.origin + window.location.pathname.replace('index.html', '');
-        const separator = baseUrl.endsWith('/') ? '' : '/';
-        const finalUrl = `${baseUrl}${separator}tableau.html?${params.toString()}`;
-        
-        document.getElementById("generatedLink").value = finalUrl;
-        document.getElementById("overlay").style.display = "flex";
-        
-        btn.innerText = "🇫🇷 VALIDER MON GOUVERNEMENT";
-        btn.disabled = false;
-      }, 50);
+      const params = new URLSearchParams();
+      let ok = false;
+      fonctions.forEach(f => { if(f.personne) { params.append(f.titre, JSON.stringify(f.personne)); ok = true; } });
+      if(!ok) return alert("Choisissez un membre !");
+      
+      const url = window.location.href.split('index.html')[0].split('?')[0] + "tableau.html?" + params.toString();
+      const generatedLink = document.getElementById("generatedLink");
+      if (generatedLink) generatedLink.value = url;
+      document.getElementById("overlay").style.display = "flex";
     };
 
-    document.getElementById("closePopup").onclick = () => document.getElementById("overlay").style.display = "none";
-    document.getElementById("copyLinkBtn").onclick = () => {
-      document.getElementById("generatedLink").select();
-      document.execCommand("copy");
-      alert("Lien copié !");
+    document.getElementById("copyLinkBtn").onclick = () => { 
+      const generatedLink = document.getElementById("generatedLink");
+      if (generatedLink) {
+        generatedLink.select(); 
+        document.execCommand("copy"); 
+        alert("Lien copié !"); 
+      }
     };
-    document.getElementById("goToTableBtn").onclick = () => window.location.href = document.getElementById("generatedLink").value;
+    document.getElementById("goToTableBtn").onclick = () => {
+      const generatedLink = document.getElementById("generatedLink");
+      if (generatedLink) window.location.href = generatedLink.value;
+    };
 
     renderGrid();
-    loadTrends();
+    loadStats();
   </script>
 </body>
 </html>
