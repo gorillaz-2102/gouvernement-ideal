@@ -2,47 +2,41 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Tableau de Bord - Daruma</title>
+  <title>Daruma - Tableau de Bord</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@700&family=Dancing+Script:wght@700&display=swap');
-    body { margin: 0; font-family: 'Segoe UI', sans-serif; background: linear-gradient(to right, #002366 33%, #ffffff 34% 66%, #ce1126 67%); min-height: 100vh; }
-    .container { max-width: 900px; margin: 40px auto; background: #f5f5f5; border-radius: 15px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-    h1 { font-family: 'Dancing Script', cursive; color: #002366; text-align: center; font-size: 3em; margin-top: 0; }
-    h2 { font-family: 'Roboto Condensed', sans-serif; border-bottom: 3px solid #ce1126; padding-bottom: 5px; margin-top: 40px; color: #333; }
+    body { margin: 0; font-family: 'Segoe UI', sans-serif; background: linear-gradient(to right, #002366 33%, #ffffff 34% 66%, #ce1126 67%); min-height: 100vh; padding: 20px; }
+    .container { max-width: 900px; margin: 20px auto; background: #f5f5f5; border-radius: 15px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+    h1 { font-family: 'Dancing Script', cursive; color: #002366; text-align: center; font-size: 3em; margin: 0; }
+    h2 { font-family: 'Roboto Condensed', sans-serif; border-bottom: 3px solid #ce1126; padding-bottom: 5px; margin-top: 30px; color: #333; }
     table { width: 100%; border-collapse: collapse; background: white; margin-top: 15px; border-radius: 8px; overflow: hidden; }
-    th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
-    th { background: #002366; color: white; text-transform: uppercase; letter-spacing: 1px; }
-    tr:hover { background: #f9f9f9; }
-    .wiki-link { color: #002366; font-weight: bold; text-decoration: none; border-bottom: 1px dotted #002366; }
-    .wiki-link:hover { color: #ce1126; border-bottom-style: solid; }
-    .return-btn { display: inline-block; margin-top: 30px; padding: 12px 25px; background: #ce1126; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; transition: 0.3s; }
-    .return-btn:hover { background: #a00d1e; transform: scale(1.05); }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+    th { background: #002366; color: white; }
+    .wiki-link { color: #002366; font-weight: bold; text-decoration: none; }
+    .return-btn { display: inline-block; margin-top: 20px; padding: 10px 20px; background: #ce1126; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Daruma - Gouvernement</h1>
-    
-    <h2>Votre Sélection</h2>
+    <h1>Daruma</h1>
+    <h2>Votre Gouvernement</h2>
     <table id="table-fonctions">
-      <thead><tr><th>Ministère</th><th>Titulaire (Fiche Wiki)</th></tr></thead>
+      <thead><tr><th>Ministère</th><th>Titulaire</th></tr></thead>
       <tbody></tbody>
     </table>
 
-    <h2>Classement Global (Top 10 Firebase)</h2>
+    <h2>Top 10 Global (Firebase)</h2>
     <table id="table-populaires">
-      <thead><tr><th>Personnalité</th><th>Nombre de sélections</th></tr></thead>
+      <thead><tr><th>Personnalité</th><th>Votes</th></tr></thead>
       <tbody></tbody>
     </table>
-
-    <a class="return-btn" href="index.html">⬅ Créer un nouveau gouvernement</a>
+    <a class="return-btn" href="index.html">⬅ Nouveau gouvernement</a>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, collection, query, orderBy, limit, getDocs, doc, setDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, increment, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // CONFIGURATION FIREBASE
     const firebaseConfig = {
       apiKey: "AIzaSyD6SEEWeN36C1_aJN6BWsmJU-YXCfwQc7g",
       authDomain: "severance-2025.firebaseapp.com",
@@ -52,82 +46,41 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-
     const params = new URLSearchParams(window.location.search);
-    const tbodyLocal = document.querySelector("#table-fonctions tbody");
 
-    // --- 1. ENREGISTRER LES VOTES AVEC SÉCURITÉ ---
-    async function saveVotes() {
-      const selectionId = params.toString(); 
-      const dejaVote = localStorage.getItem("dernier_vote");
-
-      // Si l'utilisateur a déjà voté pour cette sélection exacte, on saute l'écriture
-      if (dejaVote === selectionId) {
-        console.log("Vote déjà enregistré pour cette session.");
-        loadGlobalStats();
-        return;
-      }
-
-      for (const [key, value] of params) {
-        let nom;
-        try { 
-          nom = JSON.parse(value).nom; 
-        } catch(e) { 
-          nom = value; 
-        }
-
-        if (nom && nom !== "null" && nom !== "") {
-          const docRef = doc(db, "stats_globales", nom); 
-          await setDoc(docRef, { 
-            nom: nom, 
-            votes: increment(1) 
-          }, { merge: true });
-        }
-      }
-
-      // Marquer comme voté pour éviter le spam au rafraîchissement
-      localStorage.setItem("dernier_vote", selectionId);
-      loadGlobalStats();
-    }
-
-    // --- 2. AFFICHAGE DE LA SÉLECTION LOCALE ---
-    params.forEach((value, key) => {
-      let personne;
-      try { 
-        personne = JSON.parse(value); 
-      } catch(e) { 
-        personne = { nom: value, url: `https://fr.wikipedia.org/wiki/${encodeURIComponent(value)}` }; 
-      }
+    async function init() {
+      const tbodyLocal = document.querySelector("#table-fonctions tbody");
       
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td><b>${key}</b></td>
-        <td><a class="wiki-link" href="${personne.url}" target="_blank">${personne.nom} 🔗</a></td>
-      `;
-      tbodyLocal.appendChild(tr);
-    });
-
-    // --- 3. CHARGEMENT DU TOP 10 DEPUIS FIREBASE ---
-    async function loadGlobalStats() {
-      try {
-        const q = query(collection(db, "stats_globales"), orderBy("votes", "desc"), limit(10));
-        const snap = await getDocs(q);
-        const tbodyGlobal = document.querySelector("#table-populaires tbody");
-        tbodyGlobal.innerHTML = "";
-        
-        snap.forEach(doc => {
-          const data = doc.data();
+      // 1. Affichage et Sauvegarde
+      for (const [ministere, dataJson] of params) {
+        try {
+          const personne = JSON.parse(dataJson);
+          // Affichage
           const tr = document.createElement("tr");
-          tr.innerHTML = `<td>${data.nom}</td><td><b>${data.votes}</b> fois</td>`;
-          tbodyGlobal.appendChild(tr);
-        });
-      } catch (err) {
-        console.error("Erreur lors du chargement des stats:", err);
+          tr.innerHTML = `<td><b>${ministere}</b></td><td><a class="wiki-link" href="${personne.url}" target="_blank">${personne.nom} 🔗</a></td>`;
+          tbodyLocal.appendChild(tr);
+
+          // Sauvegarde Firebase (si pas déjà voté dans cette session)
+          if (!localStorage.getItem(`voted_${personne.nom}`)) {
+            await setDoc(doc(db, "stats_globales", personne.nom), { nom: personne.nom, votes: increment(1) }, { merge: true });
+            localStorage.setItem(`voted_${personne.nom}`, "true");
+          }
+        } catch(e) { console.error("Erreur donnée:", e); }
       }
+
+      // 2. Chargement Top 10
+      const q = query(collection(db, "stats_globales"), orderBy("votes", "desc"), limit(10));
+      const snap = await getDocs(q);
+      const tbodyGlobal = document.querySelector("#table-populaires tbody");
+      snap.forEach(doc => {
+        const d = doc.data();
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${d.nom}</td><td><b>${d.votes}</b> sélections</td>`;
+        tbodyGlobal.appendChild(tr);
+      });
     }
-    
-    // Lancement
-    saveVotes();
+
+    init();
   </script>
 </body>
 </html>
