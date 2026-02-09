@@ -45,6 +45,48 @@
 
     .result-img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-top: 10px; border: 2px solid #eee; display: none; }
     
+    .wiki-link-active {
+      color: #002366;
+      text-decoration: underline;
+      font-weight: bold;
+      margin-top: 5px;
+      font-size: 0.9em;
+    }
+
+    /* Section Tendances */
+    .trends-section {
+      padding: 30px;
+      background: #fff;
+      border-top: 5px solid #ce1126;
+      margin: 20px 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+    .trends-section h2 {
+      font-family: 'Roboto Condensed', sans-serif;
+      color: #002366;
+      margin-top: 0;
+      text-align: center;
+      text-transform: uppercase;
+    }
+    .trends-list {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 15px;
+      list-style: none;
+      padding: 0;
+    }
+    .trend-item {
+      background: #f0f4f8;
+      padding: 8px 15px;
+      border-radius: 20px;
+      font-size: 0.9em;
+      color: #333;
+      border: 1px solid #d1d9e6;
+    }
+    .trend-item b { color: #ce1126; }
+
     .footer-actions { padding: 30px; text-align: center; background: #eee; border-top: 2px solid #ddd; }
     #validerBtn { padding: 15px 40px; font-size: 1.2em; background: #28a745; color: white; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; transition: 0.3s; }
     #validerBtn:hover { background: #218838; transform: scale(1.05); }
@@ -68,6 +110,12 @@
 
     <div id="government-grid" class="grid"></div>
 
+    <div class="trends-section">
+      <h2>🔥 Personnalités les plus choisies</h2>
+      <div id="trends-loading" style="text-align:center; color:#666;">Chargement des tendances...</div>
+      <ul id="trends-list" class="trends-list"></ul>
+    </div>
+
     <div class="footer-actions">
       <button id="validerBtn">🇫🇷 VALIDER MON GOUVERNEMENT</button>
     </div>
@@ -87,7 +135,25 @@
   </div>
 
   <script type="module">
-    // Liste des 15 fonctions d'origine
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // Utilisation de la configuration globale fournie par l'environnement pour éviter les erreurs de referer
+    const firebaseConfig = typeof __firebase_config !== 'undefined' 
+      ? JSON.parse(__firebase_config) 
+      : {
+          apiKey: "AIzaSyD6SEEWeN36C1_aJN6BWsmJU-YXCfwQc7g",
+          authDomain: "severance-2025.firebaseapp.com",
+          projectId: "severance-2025",
+          appId: "1:915954379713:web:cc42c4f1c95e4b24b25d40"
+        };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'severance-2025';
+
     const fonctions = [
       { id: 1, titre: "Président de la République", personne: null },
       { id: 2, titre: "Premier Ministre", personne: null },
@@ -116,11 +182,11 @@
         card.innerHTML = `
           <div class="role-name">${f.titre}</div>
           <div class="search-box">
-            <input type="text" id="input-${f.id}" placeholder="Chercher sur Wikipedia..." onkeypress="if(event.key==='Enter') window.searchWiki(${f.id})">
+            <input type="text" id="input-${f.id}" placeholder="Chercher sur Wikipédia..." onkeypress="if(event.key==='Enter') window.searchWiki(${f.id})">
             <button onclick="window.searchWiki(${f.id})">🔍</button>
           </div>
           <img id="img-${f.id}" class="result-img">
-          <div id="nom-${f.id}" style="font-weight:bold; margin-top:5px; color:#002366; text-align:center;"></div>
+          <div id="nom-${f.id}" style="text-align:center;"></div>
         `;
         grid.appendChild(card);
       });
@@ -146,9 +212,50 @@
         const img = document.getElementById(`img-${id}`);
         img.src = personne.image;
         img.style.display = "block";
-        document.getElementById(`nom-${id}`).innerText = personne.nom;
+        
+        const nomContainer = document.getElementById(`nom-${id}`);
+        nomContainer.innerHTML = `<a href="${personne.url}" target="_blank" class="wiki-link-active">${personne.nom} 🔗</a>`;
       } catch (e) { alert("Personne non trouvée sur Wikipédia."); }
     };
+
+    async function loadTrends() {
+      try {
+        // RÈGLE 3 : Authentification via jeton personnalisé ou anonyme
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          await signInWithCustomToken(auth, __initial_auth_token);
+        } else {
+          await signInAnonymously(auth);
+        }
+
+        const user = auth.currentUser;
+        if (!user) return;
+
+        // RÈGLE 1 : Chemin strict pour les données publiques
+        const statsCol = collection(db, 'artifacts', appId, 'public', 'data', 'stats_globales');
+        const snap = await getDocs(statsCol);
+        
+        const allStats = [];
+        snap.forEach(docSnap => allStats.push(docSnap.data()));
+
+        // RÈGLE 2 : Tri en mémoire locale pour éviter les index complexes
+        allStats.sort((a, b) => (b.votes || 0) - (a.votes || 0));
+        const top10 = allStats.slice(0, 10);
+
+        const list = document.getElementById("trends-list");
+        document.getElementById("trends-loading").style.display = "none";
+        list.innerHTML = "";
+
+        top10.forEach(item => {
+          const li = document.createElement("li");
+          li.className = "trend-item";
+          li.innerHTML = `${item.nom} (<b>${item.votes || 0}</b>)`;
+          list.appendChild(li);
+        });
+      } catch (err) {
+        console.error("Erreur tendances:", err);
+        document.getElementById("trends-loading").innerText = "Tendances indisponibles.";
+      }
+    }
 
     document.getElementById("validerBtn").onclick = () => {
       const params = new URLSearchParams();
@@ -162,7 +269,6 @@
 
       if(!hasData) return alert("Veuillez sélectionner au moins un membre.");
 
-      // Calcul dynamique du chemin pour pointer vers tableau.html
       const baseUrl = window.location.origin + window.location.pathname.replace('index.html', '');
       const separator = baseUrl.endsWith('/') ? '' : '/';
       const finalUrl = `${baseUrl}${separator}tableau.html?${params.toString()}`;
@@ -180,6 +286,7 @@
     document.getElementById("goToTableBtn").onclick = () => window.location.href = document.getElementById("generatedLink").value;
 
     renderGrid();
+    loadTrends();
   </script>
 </body>
 </html>
